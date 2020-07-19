@@ -6,7 +6,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.HBox;
 
 import java.io.*;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -21,7 +20,7 @@ public class ActionTask {
 
     String path = Main.outDir; // path to project
 
-    JSONObject actionDataJSON;
+    JSONObject actionData;
     Templator actionTemplate;
     Properties lookProperties = new Properties();
     File lookPropertiesFile  = new File(path + "looks.properties");
@@ -38,20 +37,25 @@ public class ActionTask {
      */
 
     // use this getter to set the action's data
-    public JSONObject getActionDataJSON() {
-        return actionDataJSON;
+    public JSONObject getActionData() {
+        return actionData;
     }
 
     // Constructor : Loads the properties file and JSON file for the action data, and creates a new JSON if necessary
     public ActionTask(int ID, Templator actionTemplate) throws IOException, ParseException {
 
+        File actionDataDir = new File(path + "data/actions/" + ID);
         actionDataFile = new File(path + "data/actions/"+ID+"/action_"+ID+".json"); // path to action JSON
         targetFile = new File(path + "data/actions/"+ID+"/action_"+ID+".fxml"); // path to output
+
+        if (!actionDataDir.exists()) {
+            actionDataDir.mkdirs();
+        }
 
         if (actionDataFile.exists()) { // load all values into a JSONObject
 
             // cast to JSONObject because parse method returns Object
-            this.actionDataJSON = (JSONObject) new JSONParser().parse(new BufferedReader(new FileReader(actionDataFile)));
+            this.actionData = (JSONObject) new JSONParser().parse(new BufferedReader(new FileReader(actionDataFile)));
 
         } else {
 
@@ -70,7 +74,7 @@ public class ActionTask {
             w.close();
 
             // assign the JSONObject
-            this.actionDataJSON = jo;
+            this.actionData = jo;
 
         }
 
@@ -135,7 +139,7 @@ public class ActionTask {
         modVariables.put("statusCircleTopInset", Double.toString(height / 35));
 
         // setting actionTitle
-        modVariables.put("actionTitle", (String) actionDataJSON.get("actionTitle"));
+        modVariables.put("actionTitle", (String) actionData.get("actionTitle"));
 
         // setting actionTitleFontSize
         // the font size should not be less than 10
@@ -144,7 +148,7 @@ public class ActionTask {
         // setting actionBody
         // does not necessarily exist, so there will be an option to check for that
         String body;
-        if ((body = (String) actionDataJSON.get("actionData")) == null) {
+        if ((body = (String) actionData.get("actionData")) == null) {
             modVariables.put("actionData", "");
         } else {
             modVariables.put("actionData", body);
@@ -162,8 +166,7 @@ public class ActionTask {
     public HBox load(HashMap<String, String> modVariables) throws IOException {
 
         actionTemplate.template(modVariables, targetFile);
-        return (HBox) FXMLLoader.load(new URL(targetFile.getAbsolutePath()));
-
+        return (HBox) FXMLLoader.load(targetFile.toURI().toURL());
 
     }
 
