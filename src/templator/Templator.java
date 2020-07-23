@@ -12,7 +12,7 @@ public class Templator {
     File modtFile;
     String[] varNames;
     int[][] tvarPositions;
-    int lines;
+    int chars;
     HashMap<String, String> modVariables;
 
     // debugging methods
@@ -21,7 +21,7 @@ public class Templator {
         return varNames;
     }
 
-    public int[][] getTvarPositions() {
+    public int[][] getVarPositions() {
         return tvarPositions;
     }
 
@@ -50,49 +50,54 @@ public class Templator {
 
         BufferedReader r = new BufferedReader(new FileReader(modtFile));
 
-        String currentLine;
+        chars = 0;
+        char currentChar;
+        StringBuilder variableName = new StringBuilder();
         boolean nameFoundFlag = false;
         int startOfVariable = 0; // saves the first position of variable indicator (\$)
-        int currentLineNumber = 0;
-        while ((currentLine = r.readLine()) != null) {
+        while ((currentChar = (char) r.read()) != '\uFFFF') {
 
-            for (int i = 1; i < currentLine.length(); i++) {
+            // to tell the difference between names and regular characters
+            if (nameFoundFlag) {
 
-                // to tell the difference between names and regular characters
-                if (nameFoundFlag) {
+                if (currentChar == '\\') {
 
-                    if (currentLine.charAt(i) == '\\') {
-
-                        positions.add(new int[]{currentLineNumber, startOfVariable, i + 1}); // put in the range where the variable exists [a, b)
-                        names.add(currentLine.substring(startOfVariable + 2, i));
-                        nameFoundFlag = false;
-
-                    }
+                    positions.add(new int[]{startOfVariable, chars}); // put in the range where the variable exists [a, b)
+                    names.add(variableName.toString());
+                    nameFoundFlag = false;
+                    variableName = new StringBuilder();
 
                 } else {
+                    variableName.append(currentChar);
+                }
 
-                    // detect the start of a variable name
-                    if (currentLine.charAt(i) == '$' && currentLine.charAt(i - 1) == '\\') {
+            } else {
+
+                // detect the start of a variable name
+                if (currentChar == '\\') {
+                    r.mark(2); // mark so that if it is not a variable, we can return
+                    if (r.read() == '$') {
                         nameFoundFlag = true;
-                        startOfVariable = i-1;
+                        startOfVariable = chars;
+                        chars++;
+                    } else {
+                        r.reset();
                     }
-
                 }
 
             }
 
-            // throw an exception if a variable name was not closed
-            if (nameFoundFlag) {
-                throw new ParseException("A template variable was not closed", currentLineNumber + 1);
-            }
-
-            currentLineNumber++;
+            chars++;
 
         }
 
+        // throw an exception if a variable name was not closed
+        if (nameFoundFlag) {
+            throw new ParseException("A template variable was not closed", chars + 1);
+        }
+
         // put all the gathered data into the class variables
-        lines = currentLineNumber;
-        tvarPositions = positions.toArray(new int[3][positions.size()]);
+        tvarPositions = positions.toArray(new int[2][positions.size()]);
         varNames = names.toArray(new String[0]);
 
     }
@@ -107,48 +112,28 @@ public class Templator {
         BufferedReader templateReader = new BufferedReader(new FileReader(modtFile));
         BufferedWriter targetWriter = new BufferedWriter(new FileWriter(target));
 
-        // changing the list of variable positions to an iterator, since it is already ordered by position
-        Iterator<int[]> variablePositions = Arrays.asList(tvarPositions).iterator();
-        // the array of variable names for the same reason
-        Iterator<String> variables = Arrays.asList(varNames).iterator();
+        // changing arrays to iterators, since they are already ordered by position
+        Iterator<int[]> varPositions = Arrays.asList(tvarPositions).iterator();
+        Iterator<String> varNames = Arrays.asList(this.varNames).iterator();
 
         boolean allVariablesProcessed = false;
-        int[] currentVariablePositions = variablePositions.next();
+        int[] currentVarPositions = varPositions.next();
         // TODO: Edge case: 0 variables
-        for (int i = 0; i < lines; i++) {
+        for (int charPos = 0; charPos < chars; charPos++) {
 
-            if (allVariablesProcessed) {
-                targetWriter.write(templateReader.readLine() + "\n");
-            } else {
+            if (allVariablesProcessed || currentVarPositions[0] != charPos) {
+                targetWriter.write(templateReader.read());
+            } else { // currently on a variable
 
-                String currentLine = templateReader.readLine();
+                targetWriter.write(modVariables.get(varNames.next())); // Potential threat -- there is no next item in the iterator (explained in to do)
+                // set the cursor to the end of the variable
+                charPos = currentVarPositions[1];
+                templateReader.skip(currentVarPositions[1]-currentVarPositions[0] + 1);
 
-                if (currentVariablePositions[0] == i) { // if line contains template variable
-
-                    int j = 0;
-                    while (j < currentLine.length()) { // go through the current line and replace all variables
-
-                        targetWriter.write(currentLine.substring(j, currentVariablePositions[1])); // put in the part before the variable
-                        targetWriter.write(modVariables.get(variables.next())); // Potential threat -- there is no next item in the iterator (explained in to do)
-                        j = currentVariablePositions[2]; // set the cursor to the end of the variable
-                        if (variablePositions.hasNext()) { // if there are more variables
-                            currentVariablePositions = variablePositions.next(); // go to the next variable
-                            if (currentVariablePositions[0] != i + 1) { // exit if no more variables on this line
-                                targetWriter.write(currentLine.substring(j));
-                                break;
-                            }
-                        } else { // all variables have been processed
-                            allVariablesProcessed = true;
-                            targetWriter.write(currentLine.substring(j));
-                            break;
-                        }
-
-                    }
-
-                    targetWriter.write('\n');
-
-                } else {
-                    targetWriter.write(currentLine + "\n");
+                if (varPositions.hasNext()) { // if there are more variables
+                    currentVarPositions = varPositions.next(); // go to the next variable
+                } else { // all variables have been processed
+                    allVariablesProcessed = true;
                 }
 
             }
