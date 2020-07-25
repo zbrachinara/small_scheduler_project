@@ -11,7 +11,7 @@ public class Templator {
 
     File modtFile;
     String[] varNames;
-    int[][] tvarPositions;
+    int[][] varPositions;
     int chars;
     HashMap<String, String> modVariables;
 
@@ -22,14 +22,14 @@ public class Templator {
     }
 
     public int[][] getVarPositions() {
-        return tvarPositions;
+        return varPositions;
     }
 
     // production methods
 
     public void setModVariables(HashMap<String, String> modVariables) {
 
-        if (modVariables.size() != tvarPositions.length) {
+        if (modVariables.size() != varPositions.length) {
             throw new IllegalArgumentException("You passed in too few or too many variables");
         }
         this.modVariables = modVariables;
@@ -53,18 +53,19 @@ public class Templator {
         chars = 0;
         char currentChar;
         StringBuilder variableName = new StringBuilder();
-        boolean nameFoundFlag = false;
+        boolean nameFound = false;
         int startOfVariable = 0; // saves the first position of variable indicator (\$)
+        // MAIN BEHAVIOR
         while ((currentChar = (char) r.read()) != '\uFFFF') {
 
             // to tell the difference between names and regular characters
-            if (nameFoundFlag) {
+            if (nameFound) {
 
                 if (currentChar == '\\') {
 
                     positions.add(new int[]{startOfVariable, chars}); // put in the range where the variable exists [a, b)
                     names.add(variableName.toString());
-                    nameFoundFlag = false;
+                    nameFound = false;
                     variableName = new StringBuilder();
 
                 } else {
@@ -77,7 +78,7 @@ public class Templator {
                 if (currentChar == '\\') {
                     r.mark(2); // mark so that if it is not a variable, we can return
                     if (r.read() == '$') {
-                        nameFoundFlag = true;
+                        nameFound = true;
                         startOfVariable = chars;
                         chars++;
                     } else {
@@ -92,12 +93,12 @@ public class Templator {
         }
 
         // throw an exception if a variable name was not closed
-        if (nameFoundFlag) {
+        if (nameFound) {
             throw new ParseException("A template variable was not closed", chars + 1);
         }
 
         // put all the gathered data into the class variables
-        tvarPositions = positions.toArray(new int[2][positions.size()]);
+        varPositions = positions.toArray(new int[2][positions.size()]);
         varNames = names.toArray(new String[0]);
 
     }
@@ -113,15 +114,16 @@ public class Templator {
         BufferedWriter targetWriter = new BufferedWriter(new FileWriter(target));
 
         // changing arrays to iterators, since they are already ordered by position
-        Iterator<int[]> varPositions = Arrays.asList(tvarPositions).iterator();
+        Iterator<int[]> varPositions = Arrays.asList(this.varPositions).iterator();
         Iterator<String> varNames = Arrays.asList(this.varNames).iterator();
 
-        boolean allVariablesProcessed = false;
+        boolean allVarsProcessed = false;
         int[] currentVarPositions = varPositions.next();
         // TODO: Edge case: 0 variables
+        // MAIN BEHAVIOR
         for (int charPos = 0; charPos < chars; charPos++) {
 
-            if (allVariablesProcessed || currentVarPositions[0] != charPos) {
+            if (allVarsProcessed || currentVarPositions[0] != charPos) {
                 targetWriter.write(templateReader.read());
             } else { // currently on a variable
 
@@ -133,7 +135,7 @@ public class Templator {
                 if (varPositions.hasNext()) { // if there are more variables
                     currentVarPositions = varPositions.next(); // go to the next variable
                 } else { // all variables have been processed
-                    allVariablesProcessed = true;
+                    allVarsProcessed = true;
                 }
 
             }

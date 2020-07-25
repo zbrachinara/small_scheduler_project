@@ -148,10 +148,10 @@ public class ActionTask {
         // setting actionBody
         // does not necessarily exist, so there will be an option to check for that
         String body;
-        if ((body = (String) actionData.get("actionData")) == null) {
-            modVariables.put("actionData", "");
+        if ((body = (String) actionData.get("actionBody")) == null) {
+            modVariables.put("actionBody", "");
         } else {
-            modVariables.put("actionData", body);
+            modVariables.put("actionBody", body);
         }
 
         // setting actionBodyFontSize
