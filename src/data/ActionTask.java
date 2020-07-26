@@ -23,9 +23,13 @@ public class ActionTask {
     JSONObject actionData;
     Templator actionTemplate;
     Properties lookProperties = new Properties();
+
     File lookPropertiesFile  = new File(path + "looks.properties");
     File targetFile;
     File actionDataFile;
+    File actionDataDir;
+
+    int ID;
 
     // variables stored in JSON
     /*
@@ -44,7 +48,9 @@ public class ActionTask {
     // Constructor : Loads the properties file and JSON file for the action data, and creates a new JSON if necessary
     public ActionTask(int ID, Templator actionTemplate) throws IOException, ParseException {
 
-        File actionDataDir = new File(path + "data/actions/" + ID);
+        this.ID = ID;
+
+        actionDataDir = new File(path + "data/actions/" + ID);
         actionDataFile = new File(path + "data/actions/"+ID+"/action_"+ID+".json"); // path to action JSON
         targetFile = new File(path + "data/actions/"+ID+"/action_"+ID+".fxml"); // path to output
 
@@ -174,6 +180,16 @@ public class ActionTask {
 
         return load(generateModVariables());
 
+    }
+
+    public void save() throws IOException {
+        BufferedWriter actionWriter = new BufferedWriter(new FileWriter(actionDataFile));
+        actionWriter.write(actionData.toJSONString());
+        actionWriter.close();
+    }
+
+    public boolean delete() throws IOException {
+        return actionDataDir.delete();
     }
 
 }

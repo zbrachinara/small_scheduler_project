@@ -15,18 +15,22 @@ import java.util.ArrayList;
 @SuppressWarnings("unchecked")
 public class ActionStream {
 
+    int ID;
+
     String path = Main.outDir;
     String actionDir = path + "data/actions/";
 
     ArrayList<ActionTask> actionTasks;
     ArrayList<Integer> actionIDs;
+    JSONObject indexObject = new JSONObject();
     File indexFile = new File(path + "data/actionStreamIndex.json");
     Templator actionTemplate = new Templator(new File(path + "data/actions/"));
 
     public ActionStream(int ID) throws IOException, ParseException, java.text.ParseException {
 
+        this.ID = ID;
+
         // Temporarily get the object storing all stream IDs
-        JSONObject indexObject = new JSONObject();
         if (indexFile.exists()) {
             indexObject = (JSONObject) new JSONParser().parse(new BufferedReader(new FileReader(indexFile)));
         }
@@ -56,6 +60,41 @@ public class ActionStream {
 
         return out;
 
+    }
+
+    public void save() throws IOException {
+
+        BufferedWriter actionStreamWriter = new BufferedWriter(new FileWriter(indexFile));
+        indexObject.replace(ID, actionIDs);
+        actionStreamWriter.write(indexObject.toJSONString());
+
+    }
+
+    public void delete() throws IOException {
+
+        for (ActionTask action : actionTasks) {
+            action.delete();
+        }
+
+        indexObject.remove(ID);
+        save();
+
+    }
+
+    public boolean add(ActionTask action) {
+        return actionIDs.add(action.ID) & actionTasks.add(action);
+    }
+
+    public boolean add(int ID) throws IOException, ParseException {
+        return add(new ActionTask(ID, actionTemplate));
+    }
+
+    public boolean remove(ActionTask action) {
+        return actionTasks.remove(action) & actionIDs.remove(Integer.valueOf(action.ID));
+    }
+
+    public boolean remove(int ID) throws IOException, ParseException {
+        return remove(new ActionTask(ID, actionTemplate));
     }
 
 }
