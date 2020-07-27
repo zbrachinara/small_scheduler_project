@@ -49,7 +49,6 @@ public class ActionStream {
 
     }
 
-    // TODO: Make this method load all actions into a VBox and return it
     public VBox load() throws IOException {
 
         VBox out = new VBox();
@@ -64,6 +63,10 @@ public class ActionStream {
 
     public void save() throws IOException {
 
+        for (ActionTask action : actionTasks) {
+            action.save();
+        }
+
         BufferedWriter actionStreamWriter = new BufferedWriter(new FileWriter(indexFile));
         indexObject.replace(ID, actionIDs);
         actionStreamWriter.write(indexObject.toJSONString());
@@ -72,12 +75,9 @@ public class ActionStream {
 
     public void delete() throws IOException {
 
-        for (ActionTask action : actionTasks) {
-            action.delete();
-        }
-
+        purge();
         indexObject.remove(ID);
-        save();
+        save(); // to register changes to outside sources
 
     }
 
@@ -89,12 +89,40 @@ public class ActionStream {
         return add(new ActionTask(ID, actionTemplate));
     }
 
+    public boolean addAll(ActionTask ... actions) {
+        boolean out = true;
+        for (ActionTask i: actions) {
+            if (add(i)) {
+                out = false;
+            }
+        }
+        return out;
+    }
+
+    public boolean addAll(int ... IDs) throws IOException, ParseException {
+        ActionTask[] tasks = new ActionTask[IDs.length];
+        for (int i = 0; i < IDs.length; i++) {
+            tasks[i] = new ActionTask(IDs[i], actionTemplate);
+        }
+        return addAll(tasks);
+    }
+
     public boolean remove(ActionTask action) {
         return actionTasks.remove(action) & actionIDs.remove(Integer.valueOf(action.ID));
     }
 
     public boolean remove(int ID) throws IOException, ParseException {
         return remove(new ActionTask(ID, actionTemplate));
+    }
+
+    public boolean purge() throws IOException {
+        boolean out = true;
+        for (ActionTask action : actionTasks) {
+            if (action.delete()) {
+                out = false;
+            }
+        }
+        return out;
     }
 
 }
