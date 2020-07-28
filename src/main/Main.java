@@ -1,5 +1,6 @@
 package main;
 
+import data.ActionStream;
 import javafx.stage.StageStyle;
 import templator.Templator;
 import data.ActionTask;
@@ -20,11 +21,18 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException, ParseException, org.json.simple.parser.ParseException {
         Templator actionTemplate = new Templator(new File(outDir + "data/ActionFXML_1.2.7.11.modt"));
-        ActionTask testActionTask = new ActionTask(-1, actionTemplate);
 
-        testActionTask.getActionData().put("actionTitle", "TestTitle");
+        ActionTask[] testTasks = new ActionTask[5];
 
-        Parent root = testActionTask.load();
+        for (int i = 0; i < 5; i++) {
+            testTasks[i] = new ActionTask(-i, actionTemplate);
+            testTasks[i].getActionData().put("actionTitle", "Action " + i);
+            testTasks[i].save();
+        }
+        ActionStream testStream = new ActionStream(-1);
+        testStream.addAll(testTasks);
+
+        Parent root = testStream.load();
         primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
