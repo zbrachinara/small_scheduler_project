@@ -102,7 +102,7 @@ public class ActionTask {
 
     }
 
-    private HashMap<String, String> generateModVariables() {
+    private HashMap<ActionTaskValues, String> generateModVariables() {
 
         // TODO: Be able to accept a ruleset for generating these actions
 
@@ -120,58 +120,63 @@ public class ActionTask {
         actionBodyFontSize | font size of action body
         */
 
-        HashMap<String, String> modVariables = new HashMap<>();
+        HashMap<ActionTaskValues, String> modVariables = new HashMap<>();
 
         // getting variables from Properties file
         double height = Double.parseDouble(lookProperties.getProperty("actionHeight"));
         double width = Double.parseDouble(lookProperties.getProperty("actionWidth"));
 
         // setting height
-        modVariables.put("height", lookProperties.getProperty("actionHeight"));
+        modVariables.put(ActionTaskValues.height, lookProperties.getProperty("actionHeight"));
 
         // setting width
-        modVariables.put("width", lookProperties.getProperty("actionWidth"));
+        modVariables.put(ActionTaskValues.width, lookProperties.getProperty("actionWidth"));
 
         // setting statusBoxWidth
-        modVariables.put("statusBoxWidth", Double.toString(width * 6 / 35));
+        modVariables.put(ActionTaskValues.statusBoxWidth, Double.toString(width * 6 / 35));
 
         // setting statusLineWidth
-        modVariables.put("statusLineWidth", Double.toString(width / 70));
+        modVariables.put(ActionTaskValues.statusLineWidth, Double.toString(width / 70));
 
         // setting statusCircleRadius
-        modVariables.put("statusCircleRadius", Double.toString(width * 2 / 35));
+        modVariables.put(ActionTaskValues.statusCircleRadius, Double.toString(width * 2 / 35));
 
         // setting statusCircleTopInset
-        modVariables.put("statusCircleTopInset", Double.toString(height / 35));
+        modVariables.put(ActionTaskValues.statusCircleTopInset, Double.toString(height / 35));
 
         // setting actionTitle
-        modVariables.put("actionTitle", (String) actionData.get("actionTitle"));
+        modVariables.put(ActionTaskValues.actionTitle, (String) actionData.get("actionTitle"));
 
         // setting actionTitleFontSize
         // the font size should not be less than 10
-        modVariables.put("actionTitleFontSize", Double.toString((height / 8 < 10) ? 10 : (height / 8)));
+        modVariables.put(ActionTaskValues.actionTitleFontSize, Double.toString((height / 8 < 10) ? 10 : (height / 8)));
 
         // setting actionBody
         // does not necessarily exist, so there will be an option to check for that
         String body;
         if ((body = (String) actionData.get("actionBody")) == null) {
-            modVariables.put("actionBody", "");
+            modVariables.put(ActionTaskValues.actionBody, "");
         } else {
-            modVariables.put("actionBody", body);
+            modVariables.put(ActionTaskValues.actionBody, body);
         }
 
         // setting actionBodyFontSize
         // the font size should be no less than 5
-        modVariables.put("actionBodyFontSize", Double.toString((height / 16 < 5) ? 5 : height / 16));
+        modVariables.put(ActionTaskValues.actionBodyFontSize, Double.toString((height / 16 < 5) ? 5 : height / 16));
 
         return modVariables;
 
     }
 
     // placeholder to circumvent current rules
-    public HBox load(HashMap<String, String> modVariables) throws IOException {
+    public HBox load(HashMap<?, String> modVariables) throws IOException {
 
-        actionTemplate.template(modVariables, targetFile);
+        HashMap<String, String> procModVariables = new HashMap<>();
+        for (Object i: modVariables.keySet()) {
+            procModVariables.put(i.toString(), modVariables.get(i));
+        }
+
+        actionTemplate.template(procModVariables, targetFile);
         return (HBox) FXMLLoader.load(targetFile.toURI().toURL());
 
     }
