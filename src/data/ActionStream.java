@@ -1,5 +1,6 @@
 package data;
 
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import main.Main;
 
@@ -49,14 +50,16 @@ public class ActionStream {
 
     }
 
-    public VBox load() throws IOException {
+    public ScrollPane load() throws IOException {
 
-        VBox out = new VBox();
+        ScrollPane out = new ScrollPane();
+        VBox actionTaskBox = new VBox();
 
         for (ActionTask i : actionTasks) {
-            out.getChildren().add(i.load());
+            actionTaskBox.getChildren().add(i.load());
         }
 
+        out.setContent(actionTaskBox);
         return out;
 
     }

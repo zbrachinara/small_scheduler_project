@@ -177,7 +177,7 @@ public class ActionTask {
         }
 
         actionTemplate.template(procModVariables, targetFile);
-        return (HBox) FXMLLoader.load(targetFile.toURI().toURL());
+        return FXMLLoader.load(targetFile.toURI().toURL());
 
     }
 
