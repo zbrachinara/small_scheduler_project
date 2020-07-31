@@ -16,11 +16,9 @@ import java.text.ParseException;
 
 public class Main extends Application {
 
-    public static String outDir = "out/production/Scheduler/";
-
     @Override
     public void start(Stage primaryStage) throws IOException, ParseException, org.json.simple.parser.ParseException {
-        Templator actionTemplate = new Templator(new File(outDir + "data/ActionFXML_1.2.7.11.modt"));
+        Templator actionTemplate = new Templator(new File("data/ActionFXML_1.2.7.11.modt"));
 
         ActionTask[] testTasks = new ActionTask[5];
 

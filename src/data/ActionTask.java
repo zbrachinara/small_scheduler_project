@@ -18,13 +18,11 @@ import templator.Templator;
 @SuppressWarnings("unchecked")
 public class ActionTask {
 
-    String path = Main.outDir; // path to project
-
     JSONObject actionData;
     Templator actionTemplate;
     Properties lookProperties = new Properties();
 
-    File lookPropertiesFile  = new File(path + "looks.properties");
+    File lookPropertiesFile  = new File("looks.properties");
     File targetFile;
     File actionDataFile;
     File actionDataDir;
@@ -50,9 +48,9 @@ public class ActionTask {
 
         this.ID = ID;
 
-        actionDataDir = new File(path + "data/actions/" + ID);
-        actionDataFile = new File(path + "data/actions/"+ID+"/action_"+ID+".json"); // path to action JSON
-        targetFile = new File(path + "data/actions/"+ID+"/action_"+ID+".fxml"); // path to output
+        actionDataDir = new File("data/actions/" + ID);
+        actionDataFile = new File("data/actions/"+ID+"/action_"+ID+".json"); // path to action JSON
+        targetFile = new File("data/actions/"+ID+"/action_"+ID+".fxml"); // path to output
 
         if (!actionDataDir.exists()) {
             actionDataDir.mkdirs();

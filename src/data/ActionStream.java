@@ -18,14 +18,13 @@ public class ActionStream {
 
     int ID;
 
-    String path = Main.outDir;
-    String actionDir = path + "data/actions/";
+    String actionDir = "data/actions/";
 
     ArrayList<ActionTask> actionTasks = new ArrayList<>();
     ArrayList<Integer> actionIDs;
     JSONObject indexObject = new JSONObject();
-    File indexFile = new File(path + "data/actionStreamIndex.json");
-    Templator actionTemplate = new Templator(new File(path + "data/ActionFXML_1.2.7.11.modt"));
+    File indexFile = new File("data/actionStreamIndex.json");
+    Templator actionTemplate = new Templator(new File("data/ActionFXML_1.2.7.11.modt"));
 
     public ActionStream(int ID) throws IOException, ParseException, java.text.ParseException {
 
